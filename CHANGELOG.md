@@ -3,6 +3,11 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Windows Turn & Run Journal Writes**: Overhauled `append_turn_journal_event` in `api/turn_journal.py` and `append_run_event` in `api/run_journal.py` to utilize standard Python `open(path, "a", encoding="utf-8")` blocks on Windows. This bypasses C-runtime permission octal/append mode mapping differences that previously threw exceptions during SSE message stream writes. Also added a fast-return guard on Windows for directory-level fsync metadata calls (`_fsync_parent_dir` in `api/run_journal.py`) which are unsupported and unnecessary on NTFS filesystems.
+- **Git Pull Installer Conflicts & PowerShell Stderr Safety**: Overhauled `install_windows.ps1` to cleanly stash and checkout tracked scripts prior to running `git pull`, preventing local edits from blocking incoming updates. Removed the dynamic generation of version-controlled files (`start.ps1`, `start.bat`, `test_webui.py`, `test_webui.bat`) in the installer, preferring to verify their integrity and check them out from Git if missing. Using the repository's native `start.ps1` removes pipe redirection (`*>&1 | Tee-Object`), preventing PowerShell from intercepting normal Python logger output to `stderr` and aborting with a fatal `NativeCommandError` under `ErrorActionPreference = 'Stop'`.
+
 ## [v0.51.124] — 2026-05-24 — Release CV (stage-batch6 — 3-PR Windows-only stack — agent paths / docs / port hardening)
 
 ### Added

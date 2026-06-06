@@ -112,6 +112,8 @@ def _should_fsync_event(terminal_state: str | None) -> bool:
 
 
 def _fsync_parent_dir(path: Path) -> None:
+    if os.name == "nt":
+        return
     try:
         dir_fd = os.open(path.parent, getattr(os, "O_DIRECTORY", 0))
         try:
@@ -157,12 +159,19 @@ def append_run_event(
         path.parent.mkdir(parents=True, exist_ok=True)
         created_file = not path.exists()
         line = json.dumps(event, ensure_ascii=False, separators=(",", ":")) + "\n"
-        fd = os.open(path, os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o600)
-        with os.fdopen(fd, "a", encoding="utf-8") as fh:
-            fh.write(line)
-            fh.flush()
-            if _should_fsync_event(terminal_state):
-                os.fsync(fh.fileno())
+        if os.name == "nt":
+            with open(path, "a", encoding="utf-8") as fh:
+                fh.write(line)
+                fh.flush()
+                if _should_fsync_event(terminal_state):
+                    os.fsync(fh.fileno())
+        else:
+            fd = os.open(path, os.O_CREAT | os.O_APPEND | os.O_WRONLY, 0o600)
+            with os.fdopen(fd, "a", encoding="utf-8") as fh:
+                fh.write(line)
+                fh.flush()
+                if _should_fsync_event(terminal_state):
+                    os.fsync(fh.fileno())
         if created_file:
             _fsync_parent_dir(path)
         return event

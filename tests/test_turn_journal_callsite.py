@@ -23,3 +23,7 @@ def test_chat_start_writes_turn_journal_after_session_lock_and_handles_failure()
     assert "append_turn_journal_event(" not in lock_block
     assert "except Exception:" in append_block
     assert "Failed to append submitted turn journal event" in append_block
+
+
+
+
